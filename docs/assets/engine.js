@@ -7,15 +7,18 @@
  *   - each student's magic word, AES-GCM encrypted with a key derived from
  *     their CNetID plus the correct answers to every question.
  * The word can only be decrypted by answering every question correctly.
+ * Answer parsing and canonicalization come from core.js (window.CORE), shared with the build.
  */
 (() => {
   "use strict";
   const L = window.LESSON;
   const K = window.LOCK;
   const W = window.WIDGETS || {};
+  const { normalizeId, parseNumber, canonNumber } = window.CORE;
   const enc = new TextEncoder();
   const STORE = `bayes-tutorial-${L.id}-${K.salt.slice(0, 8)}`;
   const QTYPES = new Set(["mcq", "numeric", "match"]);
+  const CONFETTI = ["#7A5C99", "#D9826B", "#7FA38A", "#E4DCCD", "#2B2A28"];
 
   // ---------------------------------------------------------------- helpers
   function el(tag, attrs = {}, ...kids) {
@@ -36,17 +39,23 @@
   const idHash = (cnetid) => sha256(`${K.salt}|id|${cnetid}`);
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
-  const { normalizeId, parseNumber, canonNumber } = window.CORE;
-
   function math(root) {
     if (window.renderMathInElement) {
       window.renderMathInElement(root, {
         delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }],
+        ignoredClasses: ["nomath"],
         throwOnError: false,
       });
     }
   }
   const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function mountVisual(container, visual, ctx) {
+    if (!visual) return;
+    const fn = W[visual.widget];
+    if (!fn) { console.error(`Tutorial engine: widget "${visual.widget}" is not loaded on this page`); return; }
+    fn(container, visual.props || {}, ctx);
+  }
 
   // ---------------------------------------------------------------- state
   const questionIds = L.steps.filter((s) => QTYPES.has(s.type)).map((s) => s.id);
@@ -55,8 +64,8 @@
   function fresh(cnetid) {
     return {
       cnetid, queue: L.steps.map((_, i) => i), pos: 0,
-      done: {}, solved: {}, retried: {}, xp: 0, streak: 0,
-      firstTry: 0, startedAt: Date.now(), finishedAt: null, word: null,
+      done: {}, solved: {}, retried: {}, firstTry: 0,
+      startedAt: Date.now(), finishedAt: null, word: null,
     };
   }
   function load() {
@@ -66,7 +75,7 @@
 
   // ---------------------------------------------------------------- layout
   const app = document.getElementById("app");
-  let footer, footerInner, stageEl, progressFill, xpEl;
+  let footer, footerInner, stageEl, progressFill, countEl;
   let keyHandler = null;
 
   function setKeys(fn) {
@@ -78,12 +87,12 @@
   function shell() {
     app.innerHTML = "";
     progressFill = el("span");
-    xpEl = el("div", { class: "xp", "aria-label": "Points" });
+    countEl = el("div", { class: "count", "aria-live": "polite" });
     const top = el("header", { class: "topbar" },
       el("button", { class: "icon-btn", "aria-label": "Save and exit", title: "Save and exit", onclick: () => { save(); intro(); } },
-        el("span", { html: '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>' })),
-      el("div", { class: "progress", role: "progressbar", "aria-label": "Progress" }, progressFill),
-      xpEl);
+        el("span", { html: '<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' })),
+      el("div", { class: "progress", role: "progressbar", "aria-label": "Progress", "aria-valuemin": "0", "aria-valuemax": "100" }, progressFill),
+      countEl);
     stageEl = el("main", { class: "stage", id: "stage" });
     footerInner = el("div", { class: "footer-inner" });
     footer = el("footer", { class: "footer" }, footerInner);
@@ -91,12 +100,13 @@
     updateTop();
   }
 
-  function updateTop() {
+  function updateTop(idx) {
     const total = L.steps.length;
     const done = Object.keys(S.done).length;
-    progressFill.style.width = `${Math.round((done / total) * 100)}%`;
-    progressFill.parentElement.setAttribute("aria-valuenow", String(Math.round((done / total) * 100)));
-    xpEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M11 1L3 12h6l-1 7 8-11h-6z" fill="currentColor"/></svg>${S.xp} XP`;
+    const pct = Math.round((done / total) * 100);
+    progressFill.style.width = `${pct}%`;
+    progressFill.parentElement.setAttribute("aria-valuenow", String(pct));
+    if (idx != null) countEl.textContent = `${idx + 1} / ${total}`;
   }
 
   function setFooter({ state = "", title = "", text = "", button, onClick, disabled = false, extra = null }) {
@@ -124,10 +134,10 @@
       el("h1", {}, L.title),
       el("p", { class: "lede", html: L.lede }),
     );
-    if (L.introVisual && W[L.introVisual.widget]) {
+    if (L.introVisual) {
       const v = el("div", { class: "intro-visual" });
       wrap.append(v);
-      W[L.introVisual.widget](v, L.introVisual.props || {}, { setReady() {}, math });
+      mountVisual(v, L.introVisual, { setReady() {}, math });
     }
     const path = el("ol", { class: "path", "aria-label": "What you'll cover" });
     L.units.forEach((u, i) => {
@@ -183,20 +193,20 @@
     if (S.pos >= S.queue.length) return finish();
     const idx = S.queue[S.pos];
     const s = L.steps[idx];
-    updateTop();
+    updateTop(idx);
     stageEl.innerHTML = "";
     window.scrollTo({ top: 0 });
     const unit = L.units.find((u) => u.id === s.unit);
     if (unit) stageEl.append(el("div", { class: "unit-label" }, unit.title));
     if (S.done[idx] === undefined && S.retried[idx]) stageEl.append(el("div", { class: "retry-note" }, "Second try"));
     if (s.title) stageEl.append(el("h2", { class: "prompt" }, s.title));
-    let ctx = { ready: true, label: null, onReady: null, setReady(flag, label) { this.ready = flag; this.label = label || null; if (this.onReady) this.onReady(); }, math };
-    if (s.visual && W[s.visual.widget]) {
+    const ctx = { ready: true, label: null, onReady: null, setReady(flag, label) { this.ready = flag; this.label = label || null; if (this.onReady) this.onReady(); }, math };
+    if (s.visual) {
       const v = el("div", { class: "visual" });
       stageEl.append(v);
-      W[s.visual.widget](v, s.visual.props || {}, ctx);
+      mountVisual(v, s.visual, ctx);
     }
-    if (s.html) { const b = el("div", { class: "body-text", html: s.html }); stageEl.append(b); }
+    if (s.html) stageEl.append(el("div", { class: "body-text", html: s.html }));
     ({ read: readStep, mcq: mcqStep, numeric: numericStep, match: matchStep })[s.type](s, idx, ctx);
     math(stageEl);
   }
@@ -211,15 +221,14 @@
     if (qid) S.solved[qid] = canonical;
     if (S.done[idx] === undefined) {
       S.done[idx] = true;
-      if (firstTry) { S.firstTry += 1; S.xp += 10; S.streak += 1; } else { S.xp += 5; S.streak = 0; }
+      if (qid && firstTry) S.firstTry += 1;
     }
     save();
     updateTop();
   }
 
   function praise() {
-    const lines = ["Nice work!", "Correct!", "Exactly right.", "You got it.", "Spot on."];
-    if (S.streak >= 3 && S.streak % 3 === 0) return `${S.streak} in a row!`;
+    const lines = ["Nice work.", "Correct.", "Exactly right.", "You got it.", "Spot on."];
     return lines[Math.floor(Math.random() * lines.length)];
   }
 
@@ -236,7 +245,7 @@
   }
 
   // shared question footer -----------------------------------------------
-  function resolve({ good, idx, s, canonical, explainGood, explainBad, onDone }) {
+  function resolve({ good, idx, s, canonical, explainGood, explainBad }) {
     const firstTry = !S.retried[idx];
     if (good) {
       markDone(idx, s.id, canonical, firstTry);
@@ -244,14 +253,12 @@
       btn.focus();
     } else {
       S.retried[idx] = true;
-      S.streak = 0;
       S.queue.push(idx);
       save();
       const btn = setFooter({ state: "bad", title: "Not quite", text: (explainBad || "") + '<p style="margin-top:.5em"><b>You\'ll see this question again at the end.</b></p>', button: "Continue", onClick: advance });
       btn.focus();
     }
     setKeys((e) => { if (e.key === "Enter") { e.preventDefault(); advance(); } });
-    if (onDone) onDone(good);
   }
 
   // mcq ------------------------------------------------------------------
@@ -384,16 +391,18 @@
     app.innerHTML = "";
     const wrap = el("main", { class: "intro finish" });
     app.append(wrap);
+    if (L.finishVisual) {
+      const v = el("div", { class: "finish-visual" });
+      wrap.append(v);
+      mountVisual(v, L.finishVisual, { setReady() {}, math });
+    }
     const total = questionIds.length;
     const minutes = Math.max(1, Math.round((S.finishedAt - S.startedAt) / 60000));
     wrap.append(
       el("div", { class: "kicker" }, L.kicker),
       el("h1", {}, "Tutorial complete"),
-      el("p", { class: "lede", style: "margin:0 auto" }, L.finishLine || "You're ready for class."),
-      el("div", { class: "stats" },
-        el("div", { class: "stat" }, el("b", {}, `${S.xp}`), el("span", {}, "XP earned")),
-        el("div", { class: "stat" }, el("b", {}, `${S.firstTry}/${total}`), el("span", {}, "right on the first try")),
-        el("div", { class: "stat" }, el("b", {}, `${minutes} min`), el("span", {}, "time spent"))),
+      el("p", { class: "lede" }, L.finishLine || "You're ready for class."),
+      el("div", { class: "finish-stats" }, `${S.firstTry} of ${total} questions right on the first try · ${minutes} ${minutes === 1 ? "minute" : "minutes"}`),
     );
     const box = el("div", { class: "magic", "aria-live": "polite" }, el("div", { class: "label" }, "Unlocking your magic word…"));
     wrap.append(box);
@@ -421,6 +430,7 @@
     }
     wrap.append(el("div", { class: "row", style: "justify-content:center;margin-top:18px" },
       el("button", { class: "linklike", onclick: intro }, "Back to the start page")));
+    math(wrap);
   }
 
   function confetti() {
@@ -430,12 +440,11 @@
     const ctx = c.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.scale(dpr, dpr);
-    const colors = ["#800000", "#e3a21a", "#11875a", "#2f8fd0", "#df4f94", "#7b4fc9"];
     const parts = Array.from({ length: 140 }, () => ({
       x: innerWidth / 2 + (Math.random() - 0.5) * 120, y: innerHeight * 0.35,
       vx: (Math.random() - 0.5) * 12, vy: -Math.random() * 13 - 4,
       r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
-      w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, c: colors[Math.floor(Math.random() * colors.length)],
+      w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, c: CONFETTI[Math.floor(Math.random() * CONFETTI.length)],
     }));
     const t0 = performance.now();
     (function frame(t) {

@@ -9,7 +9,7 @@
     id: "t0",
     kicker: "Tutorial 0, a test run",
     title: "Test run",
-    lede: "Four quick steps that check the tutorial site works. Answer both questions correctly, on the first try or the second, to see your magic word.",
+    lede: "Four quick steps that check the tutorial site works. Answer both questions correctly, on the first try or a later one, to see your magic word.",
     finishLine: "All four kinds of step worked.",
     submitLine: "This is a test run. There is no Canvas quiz for Tutorial 0.",
     units: [
@@ -25,7 +25,7 @@
       },
       {
         type: "read", unit: "play", title: "Roll the die, then press Next", button: "Next",
-        visual: { widget: "die", props: { need: 30 } },
+        visual: { widget: "dieBars", props: { need: 30 } },
         html: "<p>Roll at least 30 times and watch the share of 4s settle down. <b>Next</b> unlocks after 30 rolls.</p>",
       },
       {

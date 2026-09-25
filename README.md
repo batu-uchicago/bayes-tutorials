@@ -10,15 +10,18 @@ Tutorials are optional and ungraded, so the quiz only records completion.
 | Path | Where it lives | Purpose |
 |---|---|---|
 | `docs/` | Public repo, served on GitHub Pages | The website: landing page, shared engine, one folder per tutorial |
-| `docs/assets/engine.js` | Served | Step flow, answer checking, retry queue, XP, saved progress, unlocking the word |
-| `docs/assets/widgets.js` | Served | Interactive pieces: die roller, icon arrays, email grid, Monty Hall doors, Bayes net |
-| `docs/t0/` | Served | Tutorial 0, a four-step test of the site mechanics |
-| `docs/<t>/lesson.js` | Served | A tutorial's content. It contains no answers. |
+| `docs/assets/engine.js` | Served | Step flow, answer checking, retry queue, saved progress, unlocking the word |
+| `docs/assets/core.js` | Served, and loaded by the build and the tests | Reading typed answers, canonical answers, posterior and expectation helpers |
+| `docs/assets/draw.js` | Served | Palette and drawing helpers shared by the widgets |
+| `docs/assets/widgets/` | Served | One file per interactive picture; a tutorial page loads the ones it uses |
+| `docs/assets/fonts/` | Served | Fraunces, self-hosted (SIL Open Font License in `OFL.txt`) |
+| `docs/t1/` | Served | Tutorial 1; `docs/t0/` is an unlinked four-step test of the mechanics |
+| `docs/<t>/lesson.js` | Served | A tutorial's content. The answer key is not in it, though worked explanations state the answers. |
 | `docs/<t>/lock.js` | Served | Generated. Salted answer hashes and encrypted magic words. |
-| `drafts/` | Public repo, not served | Tutorials still being written, such as the first draft of Tutorial 1 |
-| `planning/` | Public repo, not served | Design notes and implementation plans |
+| `planning/` | Public repo, not served | Design notes and plans that contain no answers |
 | `tools/build_lock.mjs` | Public repo, not served | Builds `lock.js` from the private answer key and the roster |
-| `private/` | **Its own private repo**, never in the public one | Answer keys, salts and magic-word lists |
+| `tools/test/` | Public repo, not served | Node tests: `node --test "tools/test/*.test.mjs"` |
+| `private/` | **Its own private repo**, never in the public one | Answer keys, salts, word lists, answer-bearing plans, the widget gallery and the walkthrough |
 
 ## How the magic word works
 
@@ -86,5 +89,33 @@ Commits use the repository-local identity `Batuhan Gundogdu <gundogdu@uchicago.e
 
 ## Testing locally
 
-Serve `docs/` with any static server, for example `python3 -m http.server 8765 --directory docs`, and open `http://localhost:8765/t0/`.
-The page needs `http://localhost` or `https`, because browsers only allow the encryption features on secure addresses.
+Run the Node tests with `node --test "tools/test/*.test.mjs"`.
+They check answer parsing, the posterior helpers, and that every page's scripts and widgets exist.
+
+For the browser, copy the site and the private test pages into a folder and serve it over `http://localhost`, because browsers only allow the encryption features on secure addresses:
+
+```bash
+PREVIEW_SITE=/tmp/tutorial-preview private/tools/sync-preview.sh
+python3 -m http.server 8765 --directory /tmp/tutorial-preview
+```
+
+Then open `http://localhost:8765/t1/` for the tutorial, `http://localhost:8765/__gallery__/` for every widget, and run `await runChecks()` in the gallery's console to check each widget's behaviour.
+
+## Changing a published tutorial
+
+- GitHub Pages caches files for up to 10 minutes, so push changes well before announcing them.
+  During that window a browser can mix an old `lesson.js` with a new `lock.js`.
+- Students' saved progress is keyed on the tutorial's salt, which survives rebuilds.
+  Adding, removing or reordering steps or questions in a tutorial that students have started breaks their saved progress, so limit changes to a live tutorial to wording.
+
+## Setting up on another computer
+
+1. Clone `batu-uchicago/bayes-tutorials`, then clone `batu-uchicago/bayes-tutorials-private` into its `private/` folder.
+2. In both repositories, set the commit identity and the credential helper:
+   ```bash
+   git config --local user.name "Batuhan Gundogdu"
+   git config --local user.email "gundogdu@uchicago.edu"
+   git config --local credential.https://github.com.helper ""
+   git config --local --add credential.https://github.com.helper '!f() { test "$1" = get || exit 0; echo username=batu-uchicago; echo "password=$(gh auth token --hostname github.com --user batu-uchicago)"; }; f'
+   ```
+3. Log in once with `gh auth login` as `batu-uchicago`.

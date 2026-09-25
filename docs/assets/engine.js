@@ -36,23 +36,7 @@
   const idHash = (cnetid) => sha256(`${K.salt}|id|${cnetid}`);
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
-  function normalizeId(s) {
-    return (s || "").trim().toLowerCase().replace(/@uchicago\.edu$/, "").replace(/\s+/g, "");
-  }
-  function parseNumber(raw) {
-    let s = (raw || "").trim().replace(/,/g, "").replace(/\s+/g, "");
-    if (!s) return null;
-    let pct = false;
-    if (s.endsWith("%")) { pct = true; s = s.slice(0, -1); }
-    let v;
-    if (s.includes("/")) {
-      const [a, b] = s.split("/");
-      v = Number(a) / Number(b);
-    } else v = Number(s);
-    if (!Number.isFinite(v)) return null;
-    return pct ? v / 100 : v;
-  }
-  const canonNumber = (v) => (Math.round((v + Number.EPSILON) * 100) / 100).toFixed(2);
+  const { normalizeId, parseNumber, canonNumber } = window.CORE;
 
   function math(root) {
     if (window.renderMathInElement) {
@@ -311,9 +295,10 @@
   // numeric --------------------------------------------------------------
   function numericStep(s, idx) {
     if (s.prompt) stageEl.append(el("p", { class: "body-text", html: s.prompt }));
-    const input = el("input", { class: "num-input", inputmode: "decimal", autocomplete: "off", "aria-label": "Your answer", placeholder: s.placeholder || "0.00" });
+    // No inputmode: phone keypads for "decimal" have no "/" and may only offer ",".
+    const input = el("input", { class: "num-input", type: "text", autocomplete: "off", autocapitalize: "off", autocorrect: "off", spellcheck: "false", enterkeyhint: "done", "aria-label": "Your answer", placeholder: s.placeholder || "0.00" });
     stageEl.append(el("div", { class: "num-row" }, input, s.unitLabel ? el("span", {}, s.unitLabel) : null));
-    stageEl.append(el("div", { class: "hint" }, s.hint || "Type a fraction like 3/8 or a decimal rounded to two places, like 0.38."));
+    stageEl.append(el("div", { class: "hint" }, s.hint || "A fraction like 3/8 or a decimal like 0.38."));
     const check = () => setFooter({ button: "Check", onClick: submit, disabled: parseNumber(input.value) === null });
     input.addEventListener("input", check);
     check();

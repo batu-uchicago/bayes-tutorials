@@ -33,7 +33,14 @@ const ANIMAL = ("albatross alpaca armadillo axolotl badger beaver bison bobcat c
 // ------------------------------------------------------------ helpers
 const hex = (buf) => Buffer.from(buf).toString("hex");
 const sha256 = async (s) => hex(await crypto.subtle.digest("SHA-256", enc.encode(s)));
-const canonNumber = (v) => (Math.round((Number(v) + Number.EPSILON) * 100) / 100).toFixed(2);
+function loadCore() {
+  const file = path.join(ROOT, "docs", "assets", "core.js");
+  const context = { window: {} };
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(file, "utf8"), context, { filename: file });
+  return context.window.CORE;
+}
+const CORE = loadCore();
 const die = (msg) => { console.error(`error: ${msg}`); process.exit(1); };
 
 function parseCsv(text) {
@@ -55,7 +62,7 @@ function parseCsv(text) {
   if (field !== "" || row.length) { row.push(field); rows.push(row); }
   return rows.filter((r) => r.some((c) => c.trim() !== ""));
 }
-const normalizeId = (s) => (s || "").trim().toLowerCase().replace(/@uchicago\.edu$/, "").replace(/\s+/g, "");
+const { normalizeId } = CORE;
 
 function readRoster(file) {
   if (!fs.existsSync(file)) die(`roster not found at ${file}\n  Export it from Canvas (Grades > Export > Export Entire Gradebook), save it there, and run this again.`);
@@ -96,7 +103,7 @@ for (const q of questions) {
     canonical[q.id] = a;
   } else if (q.type === "numeric") {
     if (!Number.isFinite(Number(a))) die(`${q.id}: numeric answer "${a}" is not a number`);
-    canonical[q.id] = canonNumber(a);
+    canonical[q.id] = CORE.canonNumber(Number(a));
   } else {
     const L = q.left.map((x) => x.id), R = new Set(q.right.map((x) => x.id));
     if (Object.keys(a).sort().join() !== [...L].sort().join()) die(`${q.id}: match keys must be exactly ${L.join(", ")}`);

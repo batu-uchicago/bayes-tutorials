@@ -37,17 +37,19 @@
       const shares = counts.map((c) => (rolls ? c / rolls : 0));
       const ymax = Math.max(0.35, Math.ceil(Math.max(...shares) * 20) / 20);
       const y = (v) => base - (v / ymax) * (base - top);
-      chart.append(D.svg("line", { x1: left, x2: W - 6, y1: base, y2: base, stroke: P.line }));
-      for (const v of [0, ymax / 2, ymax]) chart.append(D.text(left - 6, y(v) + 4, D.fmt(v), { "text-anchor": "end", "font-size": 11, fill: P.muted }));
-      const bw = 30, gap = (W - left - 10 - 6 * bw) / 6;
+      // Bars end at barsEnd; the 1/6 label sits in the free strip to their right, on the line.
+      const barsEnd = W - 36;
+      chart.append(D.svg("line", { x1: left, x2: barsEnd + 4, y1: base, y2: base, stroke: P.line }));
+      for (const v of [0, ymax]) chart.append(D.text(left - 6, y(v) + 4, D.fmt(v), { "text-anchor": "end", "font-size": 11, fill: P.muted }));
+      const bw = 28, gap = (barsEnd - (left + 6) - 6 * bw) / 5;
       shares.forEach((s, i) => {
         const x = left + 6 + i * (bw + gap);
         chart.append(D.bar(x, base, bw, base - y(s), i === 3 ? P.terra : P.sand, { "data-face": i + 1 }));
         chart.append(D.text(x + bw / 2, base + 17, String(i + 1), { "text-anchor": "middle", fill: P.ink }));
       });
       const r = y(1 / 6);
-      chart.append(D.svg("line", { x1: left, x2: W - 6, y1: r, y2: r, stroke: P.accent, "stroke-width": 1.5, "stroke-dasharray": "5 4" }));
-      chart.append(D.text(W - 8, r - 6, "1/6", { "text-anchor": "end", "font-size": 12, fill: P.accent, "font-style": "italic" }));
+      chart.append(D.svg("line", { x1: left, x2: barsEnd + 4, y1: r, y2: r, stroke: P.accent, "stroke-width": 1.5, "stroke-dasharray": "5 4" }));
+      chart.append(D.text(W - 4, r + 4, "1/6", { "text-anchor": "end", "font-size": 12, fill: P.accent, "font-style": "italic" }));
     }
 
     function roll(n) {

@@ -1,4 +1,4 @@
-/* Unit tests for docs/assets/core.js. Run: node --test tools/test/ */
+/* Unit tests for docs/assets/core.js. Run: node --test "tools/test/*.test.mjs" */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -43,8 +43,16 @@ test("parseNumber treats a comma as a decimal point, except before exactly three
   assert.equal(CORE.parseNumber("2 008"), 2008);
 });
 
+test("parseNumber accepts full-width digits, fraction characters and other minus signs", () => {
+  assert.equal(CORE.parseNumber("\u00BD"), 0.5);
+  assert.equal(CORE.parseNumber("\uFF10.\uFF15"), 0.5);
+  assert.equal(CORE.parseNumber("\u20130.5"), -0.5);
+  assert.equal(CORE.parseNumber("0\u30025"), 0.5);
+  assert.equal(CORE.parseNumber("3\u20448"), 0.375);
+});
+
 test("parseNumber rejects what is not a number", () => {
-  for (const bad of ["", "   ", "abc", "%", "3/", "/4", "1/0", "1/2/3", null, undefined]) {
+  for (const bad of ["", "   ", "abc", "%", "3/", "/4", "1/0", "1/2/3", "0.5.", null, undefined]) {
     assert.equal(CORE.parseNumber(bad), null, `expected null for ${JSON.stringify(bad)}`);
   }
 });

@@ -209,6 +209,13 @@
     if (s.html) stageEl.append(el("div", { class: "body-text", html: s.html }));
     ({ read: readStep, mcq: mcqStep, numeric: numericStep, match: matchStep })[s.type](s, idx, ctx);
     math(stageEl);
+    // Move focus to the new step so keyboard and screen-reader users land on it; number steps
+    // focus their answer box instead, which is described by the question.
+    const heading = stageEl.querySelector(".prompt");
+    if (heading && s.type !== "numeric") {
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    }
   }
 
   function advance() {
@@ -301,16 +308,34 @@
 
   // numeric --------------------------------------------------------------
   function numericStep(s, idx) {
-    if (s.prompt) stageEl.append(el("p", { class: "body-text", html: s.prompt }));
+    // The question text describes the answer box, so a screen reader reads it with the box.
+    const questionId = `question-${idx}`;
+    if (s.prompt) stageEl.append(el("p", { class: "body-text", id: questionId, html: s.prompt }));
+    else stageEl.querySelector(".prompt")?.setAttribute("id", questionId);
     // No inputmode: phone keypads for "decimal" have no "/" and may only offer ",".
-    const input = el("input", { class: "num-input", type: "text", autocomplete: "off", autocapitalize: "off", autocorrect: "off", spellcheck: "false", enterkeyhint: "done", "aria-label": "Your answer", placeholder: s.placeholder || "0.00" });
+    const input = el("input", { class: "num-input", type: "text", autocomplete: "off", autocapitalize: "off", autocorrect: "off", spellcheck: "false", enterkeyhint: "done", "aria-label": "Your answer", "aria-describedby": questionId, placeholder: s.placeholder || "0.00" });
     stageEl.append(el("div", { class: "num-row" }, input, s.unitLabel ? el("span", {}, s.unitLabel) : null));
     stageEl.append(el("div", { class: "hint" }, s.hint || "A fraction like 3/8 or a decimal like 0.38."));
-    const check = () => setFooter({ button: "Check", onClick: submit, disabled: parseNumber(input.value) === null });
+    const error = el("div", { class: "num-error", role: "status", hidden: true }, "That doesn't read as a number yet. Try something like 0.38 or 3/8.");
+    stageEl.append(error);
+    // Explain an unreadable answer only after a pause, so a half-typed "3/" does not flash a warning.
+    let pause = null;
+    const unreadable = () => input.value.trim() !== "" && parseNumber(input.value) === null;
+    const check = () => {
+      clearTimeout(pause);
+      error.hidden = true;
+      if (unreadable()) pause = setTimeout(() => { error.hidden = !unreadable(); }, 700);
+      setFooter({ button: "Check", onClick: submit, disabled: parseNumber(input.value) === null });
+    };
     input.addEventListener("input", check);
     check();
     setTimeout(() => input.focus(), 30);
-    setKeys((e) => { if (e.key === "Enter" && parseNumber(input.value) !== null) { e.preventDefault(); submit(); } });
+    setKeys((e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      if (parseNumber(input.value) !== null) submit();
+      else if (unreadable()) error.hidden = false;
+    });
     async function submit() {
       const v = parseNumber(input.value);
       if (v === null) return;

@@ -1,4 +1,4 @@
-/* Structural checks for the published site in docs/. Run: node --test tools/test/
+/* Structural checks for the published site in docs/. Run: node --test "tools/test/*.test.mjs"
  * Every page's local scripts and stylesheets exist, fonts are self-hosted, and every widget
  * a lesson uses is registered by a script that its page loads. */
 import { test } from "node:test";
@@ -40,6 +40,15 @@ test("fonts are self-hosted: no page or asset calls Google Fonts", () => {
   const urls = [...css.matchAll(/url\("?([^")]+)"?\)/g)].map((m) => m[1]);
   assert.ok(urls.length >= 2, "style.css declares the Fraunces font files");
   for (const u of urls) assert.ok(fs.existsSync(path.join(DOCS, "assets", u)), `style.css points to missing ${u}`);
+});
+
+test("bold text uses a weight the self-hosted font has", () => {
+  const css = fs.readFileSync(path.join(DOCS, "assets", "style.css"), "utf8");
+  const maxWeight = Math.max(...[...css.matchAll(/font-weight:\s*\d+\s+(\d+);/g)].map((m) => Number(m[1])));
+  const rule = css.match(/(?:^|\n)\s*b,\s*strong\s*{([^}]*)}/);
+  assert.ok(rule, "style.css sets a weight for b and strong");
+  const w = Number((rule[1].match(/font-weight:\s*(\d+)/) || [])[1]);
+  assert.ok(w > 400 && w <= maxWeight, `b and strong use weight ${w}, but the font only goes up to ${maxWeight}`);
 });
 
 test("every widget a lesson uses is registered by a script its page loads", () => {

@@ -20,6 +20,7 @@ Tutorials are optional and ungraded, so the quiz only records completion.
 | `docs/<t>/lock.js` | Served | Generated. Salted answer hashes and encrypted magic words. |
 | `planning/` | Public repo, not served | Design notes and plans that contain no answers |
 | `tools/build_lock.mjs` | Public repo, not served | Builds `lock.js` from the private answer key and the roster |
+| `tools/make_qr.py` | Public repo, not served | Makes the QR codes for a tutorial link (`qr.png` for Canvas, `qr.svg` for slides) |
 | `tools/test/` | Public repo, not served | Node tests: `node --test "tools/test/*.test.mjs"` |
 | `private/` | **Its own private repo**, never in the public one | Answer keys, salts, word lists, answer-bearing plans, the widget gallery and the walkthrough |
 
@@ -51,7 +52,7 @@ It does not stop a student from getting answers from a friend or an AI tool, whi
 4. Commit and push both repositories (see "Publishing on GitHub Pages").
 5. In Canvas, create a quiz named "Tutorial 1", worth 0 points or set as an ungraded survey, with one fill-in-the-blank or essay question: "Enter your magic word."
    Make it due before the session, Friday at 1:30 PM.
-   Put the tutorial link in the quiz description.
+   Put the tutorial link and its QR code in the quiz description (see "QR codes").
 
 The CNetID `demo` always works and unlocks the word `practice-only`, so you and the TA can try a tutorial without a roster entry.
 
@@ -86,6 +87,19 @@ Commits use the repository-local identity `Batuhan Gundogdu <gundogdu@uchicago.e
 3. Run `node tools/build_lock.mjs t2 --roster private/roster.csv`.
    The script refuses to build if the key and the lesson disagree.
 4. Add the tutorial to `docs/index.html`.
+5. Make its QR codes with `python3 tools/make_qr.py t2`.
+   The Node tests fail until every tutorial on the landing page has them.
+
+## QR codes
+
+`python3 tools/make_qr.py t1` writes `docs/t1/qr.png` and `docs/t1/qr.svg`; `python3 tools/make_qr.py index` does the same for the landing page.
+It needs segno once: `python3 -m pip install -r tools/requirements.txt`.
+
+- `qr.png` is the plain code for Canvas.
+  In the quiz description, use the editor's image button to upload it, then type the tutorial's name and link underneath, for anyone who cannot scan.
+- `qr.svg` prints the tutorial's name and link under the code and stays sharp when projected, so use it on slides.
+- The codes are black on white with the standard white margin, which scans most reliably; keep them that way.
+- They are also published, for example at `https://batu-uchicago.github.io/bayes-tutorials/t1/qr.png`.
 
 ## Testing locally
 

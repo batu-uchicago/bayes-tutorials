@@ -42,6 +42,23 @@ test("fonts are self-hosted: no page or asset calls Google Fonts", () => {
   for (const u of urls) assert.ok(fs.existsSync(path.join(DOCS, "assets", u)), `style.css points to missing ${u}`);
 });
 
+test("the landing page and every tutorial it links to have QR codes", () => {
+  const landing = fs.readFileSync(path.join(DOCS, "index.html"), "utf8");
+  const folders = ["", ...[...landing.matchAll(/<a href="(t\d+)\/"/g)].map((m) => m[1])];
+  assert.ok(folders.length > 1, "the landing page links to at least one tutorial");
+  for (const folder of folders) {
+    for (const file of ["qr.png", "qr.svg"]) {
+      const p = path.join(DOCS, folder, file);
+      assert.ok(fs.existsSync(p), `missing docs/${folder ? folder + "/" : ""}${file}; run python3 tools/make_qr.py ${folder || "index"}`);
+    }
+    const png = fs.readFileSync(path.join(DOCS, folder, "qr.png"));
+    assert.equal(png.subarray(1, 4).toString(), "PNG", `docs/${folder}/qr.png is not a PNG`);
+    const svg = fs.readFileSync(path.join(DOCS, folder, "qr.svg"), "utf8");
+    const url = `https://batu-uchicago.github.io/bayes-tutorials/${folder ? folder + "/" : ""}`;
+    assert.ok(svg.includes(url.replace("https://", "")), `docs/${folder}/qr.svg should print its link, ${url}`);
+  }
+});
+
 test("bold text uses a weight the self-hosted font has", () => {
   const css = fs.readFileSync(path.join(DOCS, "assets", "style.css"), "utf8");
   const maxWeight = Math.max(...[...css.matchAll(/font-weight:\s*\d+\s+(\d+);/g)].map((m) => Number(m[1])));

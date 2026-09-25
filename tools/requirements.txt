@@ -1,0 +1,2 @@
+# Python tools: QR codes for the tutorial links (python3 tools/make_qr.py <t>)
+segno==1.6.6

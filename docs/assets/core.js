@@ -14,10 +14,10 @@
   // Reads what a student types: decimals, fractions (7/2), percentages (50%), spaces and
   // thousands separators. A comma is a decimal point ("3,5", "0,125") unless exactly three
   // digits follow it after a non-zero integer part ("1,000"). Full-width digits, fraction
-  // characters (½, 3⁄8), dash-like minus signs and the ideographic full stop are folded first.
+  // characters (the one-half sign, fraction slashes), dash-like minus signs and the ideographic full stop are folded first.
   function parseNumber(raw) {
     let s = String(raw == null ? "" : raw).normalize("NFKC").trim().replace(/\s+/g, "")
-      .replace(/[−‒–—]/g, "-").replace(/[⁄∕]/g, "/").replace(/。/g, ".");
+      .replace(/[\u2212\u2012\u2013\u2014]/g, "-").replace(/[\u2044\u2215]/g, "/").replace(/\u3002/g, ".");
     if (!s) return null;
     let pct = false;
     if (s.endsWith("%")) { pct = true; s = s.slice(0, -1); }

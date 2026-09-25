@@ -2,7 +2,8 @@
 
 Short, Duolingo-style tutorials students finish before each class.
 Each one ends with a personal magic word that the student enters in a Canvas quiz.
-The TA grades the quiz by comparing each submitted word with a private list.
+The TA checks each submitted word against a private list to see who finished.
+Tutorials are optional and ungraded, so the quiz only records completion.
 
 ## What is where
 
@@ -29,12 +30,14 @@ The TA grades the quiz by comparing each submitted word with a private list.
 - A word is useless to anyone else: the TA checks it against the submitting student's own word.
 
 This makes casual sharing pointless and stops "skip to the last slide" tricks.
-It does not stop a student from getting answers from a friend or an AI tool, so grade tutorials as completion credit.
+It does not stop a student from getting answers from a friend or an AI tool, which is fine because tutorials only record completion.
 
 ## Before each tutorial goes live
 
 1. Export the roster from Canvas: Grades, then Export, then "Export Entire Gradebook".
-   Save it as `private/roster.csv`. The script reads the "SIS Login ID" column, which holds CNetIDs.
+   Save it as `private/roster.csv`.
+   The script reads the "SIS Login ID" column, which holds CNetIDs.
+   Before the first build with the real roster, delete the `test` rows from `private/magic_words/*.csv` and leave `private/state/` alone, so the TA's lists hold only real students.
 2. Build the lock:
    ```bash
    node tools/build_lock.mjs t1 --roster private/roster.csv
@@ -43,16 +46,19 @@ It does not stop a student from getting answers from a friend or an AI tool, so 
    Rerunning keeps every existing student's word and only adds new students.
 3. Give `private/magic_words/t1.csv` to the TA. Do not post it anywhere.
 4. Commit and push both repositories (see "Publishing on GitHub Pages").
-5. In Canvas, create a quiz named "Tutorial 1" with one fill-in-the-blank or essay question: "Enter your magic word."
-   Due Friday at 1:30 PM. Put the tutorial link in the quiz description.
+5. In Canvas, create a quiz named "Tutorial 1", worth 0 points or set as an ungraded survey, with one fill-in-the-blank or essay question: "Enter your magic word."
+   Make it due before the session, Friday at 1:30 PM.
+   Put the tutorial link in the quiz description.
 
 The CNetID `demo` always works and unlocks the word `practice-only`, so you and the TA can try a tutorial without a roster entry.
 
-## Grading (TA)
+## Tracking completion (TA)
 
 1. In the Canvas quiz, download the student answers report as a CSV.
-2. Compare each student's answer with their row in `private/magic_words/t1.csv`, ignoring case and spaces.
-3. Upload the scores through Grades, then Import, or enter them in SpeedGrader.
+2. Compare each student's answer with their row in `private/magic_words/<t>.csv`, ignoring case and spaces.
+
+A match means the student finished the tutorial.
+Nothing goes into the gradebook.
 
 ## Publishing on GitHub Pages
 
@@ -62,18 +68,20 @@ Pushing to `main` republishes it within a few minutes.
 
 `private/` is its own git repository, pushed to the private repository `batu-uchicago/bayes-tutorials-private`.
 The public repository ignores it.
-`private/roster.csv` is ignored in both, because a gradebook export holds names, student ID numbers and grades.
+Every CSV except the word lists is ignored in both, because Canvas exports hold names, student ID numbers and grades, whatever they are named.
 Commit and push `private/` after every build, so the salts and word lists are backed up.
 
 Both repositories push as `batu-uchicago`, whichever account `gh` has active.
-A repository-local credential helper asks `gh auth token --user batu-uchicago` for the token.
+A repository-local credential helper, scoped to github.com, asks `/opt/homebrew/bin/gh auth token --user batu-uchicago` for the token.
 Commits use the repository-local identity `Batuhan Gundogdu <gundogdu@uchicago.edu>`.
 
 ## Adding next week's tutorial
 
-1. Copy an existing tutorial folder, such as `docs/t0/`, to `docs/t2/` and rewrite `lesson.js`. Keep question ids unique within the lesson.
+1. Copy an existing tutorial folder, such as `docs/t0/`, to `docs/t2/` and rewrite `lesson.js`.
+   Keep question ids unique within the lesson.
 2. Write the answer key in `private/answers/t2.json`: an option id for multiple choice, a number for numeric questions, a mapping for matching questions.
-3. Run `node tools/build_lock.mjs t2 --roster private/roster.csv`. The script refuses to build if the key and the lesson disagree.
+3. Run `node tools/build_lock.mjs t2 --roster private/roster.csv`.
+   The script refuses to build if the key and the lesson disagree.
 4. Add the tutorial to `docs/index.html`.
 
 ## Testing locally

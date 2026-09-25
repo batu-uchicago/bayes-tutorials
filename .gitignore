@@ -1,3 +1,8 @@
 private/
 node_modules/
 .DS_Store
+
+# Canvas exports (gradebooks, quiz reports) hold names, student ID numbers and grades.
+# Keep every CSV out of this public repo, whatever Canvas named it.
+# To publish a real data file, add it with `git add -f`.
+*.csv

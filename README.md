@@ -6,15 +6,18 @@ The TA grades the quiz by comparing each submitted word with a private list.
 
 ## What is where
 
-| Path | Published? | Purpose |
+| Path | Where it lives | Purpose |
 |---|---|---|
-| `docs/` | Yes, on GitHub Pages | The website: landing page, shared engine, one folder per tutorial |
-| `docs/assets/engine.js` | Yes | Step flow, answer checking, retry queue, XP, saved progress, unlocking the word |
-| `docs/assets/widgets.js` | Yes | Interactive pieces: die roller, icon arrays, email grid, Monty Hall doors, Bayes net |
-| `docs/t1/lesson.js` | Yes | Tutorial 1 content. It contains no answers. |
-| `docs/t1/lock.js` | Yes | Generated. Salted answer hashes and encrypted magic words. |
-| `tools/build_lock.mjs` | Yes | Builds `lock.js` from the private answer key and the roster |
-| `private/` | **No, never commit** | Answer keys, the salt and the magic-word lists for the TA |
+| `docs/` | Public repo, served on GitHub Pages | The website: landing page, shared engine, one folder per tutorial |
+| `docs/assets/engine.js` | Served | Step flow, answer checking, retry queue, XP, saved progress, unlocking the word |
+| `docs/assets/widgets.js` | Served | Interactive pieces: die roller, icon arrays, email grid, Monty Hall doors, Bayes net |
+| `docs/t0/` | Served | Tutorial 0, a four-step test of the site mechanics |
+| `docs/<t>/lesson.js` | Served | A tutorial's content. It contains no answers. |
+| `docs/<t>/lock.js` | Served | Generated. Salted answer hashes and encrypted magic words. |
+| `drafts/` | Public repo, not served | Tutorials still being written, such as the first draft of Tutorial 1 |
+| `planning/` | Public repo, not served | Design notes and implementation plans |
+| `tools/build_lock.mjs` | Public repo, not served | Builds `lock.js` from the private answer key and the roster |
+| `private/` | **Its own private repo**, never in the public one | Answer keys, salts and magic-word lists |
 
 ## How the magic word works
 
@@ -39,7 +42,7 @@ It does not stop a student from getting answers from a friend or an AI tool, so 
    This writes `docs/t1/lock.js` and `private/magic_words/t1.csv`.
    Rerunning keeps every existing student's word and only adds new students.
 3. Give `private/magic_words/t1.csv` to the TA. Do not post it anywhere.
-4. Publish `docs/` (see below).
+4. Commit and push both repositories (see "Publishing on GitHub Pages").
 5. In Canvas, create a quiz named "Tutorial 1" with one fill-in-the-blank or essay question: "Enter your magic word."
    Due Friday at 1:30 PM. Put the tutorial link in the quiz description.
 
@@ -53,19 +56,27 @@ The CNetID `demo` always works and unlocks the word `practice-only`, so you and 
 
 ## Publishing on GitHub Pages
 
-1. Create a repository in the course organization, for example `tutorials`, and push this folder.
-   `private/` is excluded by `.gitignore`. Check that it never appears on GitHub.
-2. In the repository settings, open Pages, choose "Deploy from a branch", branch `main`, folder `/docs`.
-3. The site appears at `https://<organization>.github.io/tutorials/`. Tutorial 1 is at `.../t1/`.
+The site is published from the public repository `batu-uchicago/bayes-tutorials`, branch `main`, folder `/docs`.
+It appears at `https://batu-uchicago.github.io/bayes-tutorials/`.
+Pushing to `main` republishes it within a few minutes.
+
+`private/` is its own git repository, pushed to the private repository `batu-uchicago/bayes-tutorials-private`.
+The public repository ignores it.
+`private/roster.csv` is ignored in both, because a gradebook export holds names, student ID numbers and grades.
+Commit and push `private/` after every build, so the salts and word lists are backed up.
+
+Both repositories push as `batu-uchicago`, whichever account `gh` has active.
+A repository-local credential helper asks `gh auth token --user batu-uchicago` for the token.
+Commits use the repository-local identity `Batuhan Gundogdu <gundogdu@uchicago.edu>`.
 
 ## Adding next week's tutorial
 
-1. Copy `docs/t1/` to `docs/t2/` and rewrite `lesson.js`. Keep question ids unique within the lesson.
+1. Copy an existing tutorial folder, such as `docs/t0/`, to `docs/t2/` and rewrite `lesson.js`. Keep question ids unique within the lesson.
 2. Write the answer key in `private/answers/t2.json`: an option id for multiple choice, a number for numeric questions, a mapping for matching questions.
 3. Run `node tools/build_lock.mjs t2 --roster private/roster.csv`. The script refuses to build if the key and the lesson disagree.
 4. Add the tutorial to `docs/index.html`.
 
 ## Testing locally
 
-Serve `docs/` with any static server, for example `python3 -m http.server 8765 --directory docs`, and open `http://localhost:8765/t1/`.
+Serve `docs/` with any static server, for example `python3 -m http.server 8765 --directory docs`, and open `http://localhost:8765/t0/`.
 The page needs `http://localhost` or `https`, because browsers only allow the encryption features on secure addresses.

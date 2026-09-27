@@ -33,24 +33,24 @@
       // ---------------------------------------------------------------- Unit 1
       {
         type: "read", unit: "chance", title: "Distribution",
-        visual: { widget: "pmfToggle" },
-        html: r`<p>A <b>probability distribution</b> gives the probability of every outcome, $p_X(x) = P(X = x)$. No probability is negative, and together they add up to 1: $\sum_x p_X(x) = 1$.</p><p>Switch between a fair die and a loaded die that favors fours.</p>${src("Donovan and Mickey, Chapter 1 · Lecture 1, slide 24")}`,
+        visual: { widget: "distToggle" },
+        html: r`<p>A <b>probability distribution</b> says how likely each outcome is. A <b>discrete</b> variable, such as a die roll, has a probability mass function $p_X(x) = P(X = x)$: every outcome gets a probability, and they add up to 1. A <b>continuous</b> variable, such as a lifespan, has a probability density function $f_X(x)$: probability is area under the curve, and the total area is 1.</p><p>Switch between the two.</p>${src("Donovan and Mickey, Chapters 1 and 9 · Lecture 1, slide 24")}`,
       },
       {
         type: "mcq", id: "t1_expectation", unit: "chance", title: "Expectation",
         prompt: `A gamemaster offers a single roll of a fair die. Roll a four and you win ${usd("1,000,000")}; roll anything else and you pay ${usd("10,000")}. Only one person gets to play, and the seat goes to the highest bidder. What is the most you could bid and still come out ahead on average?`,
         options: [
-          { id: "a", html: `About ${usd("158,000")}` },
-          { id: "b", html: `About ${usd("167,000")}`, why: `About ${usd("167,000")} is ${usd("1,000,000")} × 1/6, the win alone. It forgets the ${usd("10,000")} you pay the other 5 times in 6.` },
-          { id: "c", html: `About ${usd("394,000")}`, why: `About ${usd("394,000")} is the loaded die from the last step, where a four comes up 40% of the time. This die is fair.` },
-          { id: "d", html: usd("1,000,000"), why: `${usd("1,000,000")} is the prize itself. Bid that and even a four only gets your money back, while the other 5 rolls in 6 cost you more.` },
+          { id: "e", html: usd("156,667"), why: `${usd("156,667")} is ${usd("1,000,000")} × 1/6 − ${usd("10,000")}: it charges the ${usd("10,000")} on every roll, but you only pay it on the 5 rolls in 6 that aren't a four.` },
+          { id: "a", html: usd("158,333") },
+          { id: "b", html: usd("166,667"), why: `${usd("166,667")} is ${usd("1,000,000")} × 1/6, the win alone. It forgets the ${usd("10,000")} you pay the other 5 times in 6.` },
+          { id: "c", html: usd("495,000"), why: `${usd("495,000")} is the plain average of +${usd("1,000,000")} and −${usd("10,000")}, as if winning and losing were equally likely. A four comes up only 1 time in 6.` },
         ],
-        explain: r`$(1/6)(1{,}000{,}000) + (5/6)(-10{,}000) \approx 158{,}333$. That probability-weighted average of the payoffs is the <b>expectation</b>, $E[X] = \sum_x x\, p_X(x)$. Bid less than about ${usd("158,000")} and you come out ahead on average. Any single play still loses 5 times in 6, so a cautious bidder would stop well short of it.`,
+        explain: r`$(1/6)(1{,}000{,}000) + (5/6)(-10{,}000) \approx 158{,}333$. That probability-weighted average of the payoffs is the <b>expectation</b>, $E[X] = \sum_x x\, p_X(x)$. Bid less than ${usd("158,333")} and you come out ahead on average. Any single play still loses 5 times in 6, so a cautious bidder would stop well short of it.`,
       },
       // ---------------------------------------------------------------- Unit 2
       {
         type: "read", unit: "traits", title: "Joint probability",
-        visual: { widget: "peopleGrid" },
+        visual: { widget: "peopleVenn" },
         html: r`<p>Donovan and Mickey describe 100 people and two traits. <b>A</b>: left-eye dominant, 70 people. <b>B</b>: Morton's toe, a second toe longer than the big toe, 15 people. Five people have both.</p><p>The <b>joint probability</b> of both traits is $P(AB) = 5/100 = 0.05$. The book writes it $\Pr(A \cap B)$; in class we write $P(AB)$.</p>${src("Donovan and Mickey, Chapter 2 · Lecture 1, slide 25")}`,
       },
       {
@@ -72,7 +72,7 @@
       },
       {
         type: "read", unit: "traits", title: "Conditional probability", button: "Next",
-        visual: { widget: "peopleGrid", props: { zoom: true } },
+        visual: { widget: "peopleVenn", props: { zoom: true } },
         html: r`<p>A <b>conditional probability</b> shrinks the world to the people with one trait, then asks about the other: $P(A \mid B) = \dfrac{P(AB)}{P(B)}$.</p><p>Zoom into each trait, and notice that $P(A \mid B)$ and $P(B \mid A)$ are not the same.</p>${src("Donovan and Mickey, Chapter 2 · Lecture 1, slide 30")}`,
       },
       {
@@ -87,29 +87,52 @@
       },
       // ---------------------------------------------------------------- Unit 3
       {
-        type: "read", unit: "turn", title: "Bayes' rule", button: "Next",
-        visual: { widget: "bayesDerivation", props: {
-          lines: [r`P(AB) = P(A \mid B)\,P(B)`, r`P(AB) = P(B \mid A)\,P(A)`, r`P(A \mid B) = \dfrac{P(B \mid A)\,P(A)}{P(B)}`],
-          check: r`Check it on the toe table: $\dfrac{(5/70) \times 0.70}{0.15} = 0.33$, the same $P(A \mid B)$ you found by zooming in.`,
-        } },
-        html: r`<p>The joint probability can be written two ways. Set them equal, divide by $P(B)$, and you have <b>Bayes' rule</b>.</p>${src("Donovan and Mickey, Chapter 3 · Lecture 1, slide 36")}`,
+        type: "read", unit: "turn", title: "Bayes' rule",
+        html: r`<div class="card formula">$$P(A \mid B) = \frac{P(B \mid A)\,P(A)}{P(B)}$$</div><p>Bayes' rule turns $P(B \mid A)$ around into $P(A \mid B)$. Check it on the toe table: $\dfrac{(5/70) \times 0.70}{0.15} = 0.33$, the same $P(A \mid B)$ you found by zooming in.</p>${src("Donovan and Mickey, Chapter 3 · Lecture 1, slide 36")}`,
       },
       {
-        type: "match", id: "t1_parts", unit: "turn", title: "Prior, likelihood, evidence, posterior",
-        prompt: r`In Bayesian inference, $A$ becomes a hypothesis $H$ and $B$ becomes the data: $P(H \mid \text{data}) = \dfrac{P(\text{data} \mid H)\,P(H)}{P(\text{data})}$. Match each name to its meaning.`,
-        left: [
+        type: "mcq", id: "t1_part_prior", unit: "turn", title: "Which part is P(H)?", columns: 2,
+        prompt: r`In Bayesian inference, $A$ becomes a hypothesis $H$ and $B$ becomes the data:$$P(H \mid \text{data}) = \frac{P(\text{data} \mid H)\,P(H)}{P(\text{data})}$$ $P(H)$ is your belief about the hypothesis before the data are available. What is it called?`,
+        options: [
           { id: "prior", html: "Prior" },
+          { id: "likelihood", html: "Likelihood", why: r`The likelihood is $P(\text{data} \mid H)$: how well $H$ predicts the data. $P(H)$ has no data in it.` },
+          { id: "evidence", html: "Evidence", why: r`The evidence is $P(\text{data})$, the probability of the data over all the hypotheses together.` },
+          { id: "posterior", html: "Posterior", why: r`The posterior is $P(H \mid \text{data})$, your belief after the data. $P(H)$ comes before them.` },
+        ],
+        explain: r`The <b>prior</b>: what you believe about $H$ before you look at the data.`,
+      },
+      {
+        type: "mcq", id: "t1_part_likelihood", unit: "turn", title: "Which part is P(data | H)?", columns: 2,
+        prompt: r`$$P(H \mid \text{data}) = \frac{P(\text{data} \mid H)\,P(H)}{P(\text{data})}$$ $P(\text{data} \mid H)$ is how probable the data are if the hypothesis is true. What is it called?`,
+        options: [
+          { id: "prior", html: "Prior", why: r`The prior is $P(H)$, your belief before any data.` },
           { id: "likelihood", html: "Likelihood" },
-          { id: "evidence", html: "Evidence" },
+          { id: "evidence", html: "Evidence", why: r`The evidence is $P(\text{data})$, which doesn't assume any one hypothesis.` },
+          { id: "posterior", html: "Posterior", why: r`The posterior is $P(H \mid \text{data})$: the same two things, turned around. Here the data come before the bar.` },
+        ],
+        explain: r`The <b>likelihood</b>: how well $H$ predicts the data you saw. Likelihoods for different hypotheses don't have to add up to 1.`,
+      },
+      {
+        type: "mcq", id: "t1_part_posterior", unit: "turn", title: "Which part is P(H | data)?", columns: 2,
+        prompt: r`$$P(H \mid \text{data}) = \frac{P(\text{data} \mid H)\,P(H)}{P(\text{data})}$$ $P(H \mid \text{data})$ is your belief about the hypothesis after you have seen the data. What is it called?`,
+        options: [
+          { id: "prior", html: "Prior", why: r`The prior is $P(H)$, before the data. After the bar comes what you've learned.` },
+          { id: "likelihood", html: "Likelihood", why: r`The likelihood is $P(\text{data} \mid H)$, the same two things turned the other way around.` },
+          { id: "evidence", html: "Evidence", why: r`The evidence is $P(\text{data})$, the denominator.` },
           { id: "posterior", html: "Posterior" },
         ],
-        right: [
-          { id: "r_prior", html: r`$P(H)$: your belief before the data` },
-          { id: "r_lik", html: r`$P(\text{data} \mid H)$: how well $H$ predicts the data` },
-          { id: "r_evid", html: r`$P(\text{data})$: prior × likelihood, added up over all hypotheses` },
-          { id: "r_post", html: r`$P(H \mid \text{data})$: your belief after the data` },
+        explain: r`The <b>posterior</b>: your updated belief, and the thing Bayesian inference is after.`,
+      },
+      {
+        type: "mcq", id: "t1_part_evidence", unit: "turn", title: "Which part is P(data)?", columns: 2,
+        prompt: r`$$P(H \mid \text{data}) = \frac{P(\text{data} \mid H)\,P(H)}{P(\text{data})}$$ $P(\text{data})$ is the probability of the data: prior × likelihood, added up over all the hypotheses. What is it called?`,
+        options: [
+          { id: "prior", html: "Prior", why: r`The prior is $P(H)$, a belief about one hypothesis. $P(\text{data})$ is about the data.` },
+          { id: "likelihood", html: "Likelihood", why: r`The likelihood assumes one hypothesis. $P(\text{data})$ adds up over all of them.` },
+          { id: "evidence", html: "Evidence" },
+          { id: "posterior", html: "Posterior", why: r`The posterior is $P(H \mid \text{data})$, a belief about a hypothesis after the data.` },
         ],
-        explain: "The evidence is the same for every hypothesis, so it only rescales: the posterior is proportional to prior × likelihood.",
+        explain: r`The <b>evidence</b>. It is the same for every hypothesis, so it only rescales: the posterior is proportional to prior × likelihood.`,
       },
       {
         type: "read", unit: "turn", title: "Law of total probability",
@@ -185,9 +208,9 @@
         prompt: r`With a 50/50 prior and likelihoods 0.021 for Hamilton and 0.140 for Madison, what is $P(\text{Hamilton} \mid \text{data})$?`,
         options: [
           { id: "a", html: "0.021", why: r`0.021 is Hamilton's likelihood, $P(\text{data} \mid \text{Hamilton})$. The posterior turns it around.` },
-          { id: "b", html: "About 0.13" },
+          { id: "b", html: "0.13" },
           { id: "c", html: "0.50", why: `0.50 is the prior. How rarely paper 54 uses "upon" is data, and it moves the posterior.` },
-          { id: "d", html: "About 0.87", why: "About 0.87 is Madison's posterior. Hamilton gets the rest." },
+          { id: "d", html: "0.87", why: "0.87 is Madison's posterior. Hamilton gets the rest." },
         ],
         explain: r`The products are $0.5 \times 0.021 = 0.0105$ and $0.5 \times 0.140 = 0.070$. Rescaled: $0.0105 / (0.0105 + 0.070) \approx 0.13$. Even with the 0.75 prior it only rises to about 0.31: the word "upon" points to Madison.`,
       },
@@ -218,8 +241,8 @@
         prompt: r`The chance that the next flip lands heads averages $p$ over the posterior: $P(\text{heads next} \mid \text{data}) = E[p \mid \text{data}]$. With posteriors 0.566 for $p = 0.5$ and 0.434 for $p = 0.4$, what is it?`,
         options: [
           { id: "a", html: "0.450", why: "0.450 is halfway between 0.5 and 0.4, which would be right only if the posterior were 50/50. It leans toward the fair coin, so the average sits a little higher." },
-          { id: "b", html: "About 0.457" },
-          { id: "c", html: "About 0.566", why: r`About 0.566 is $P(p = 0.5 \mid \text{data})$, the probability of a hypothesis. The question asks for the probability of heads.` },
+          { id: "b", html: "0.457" },
+          { id: "c", html: "0.566", why: r`0.566 is $P(p = 0.5 \mid \text{data})$, the probability of a hypothesis. The question asks for the probability of heads.` },
           { id: "d", html: "2/3", why: r`2/3 is the share of heads in the three flips. Under this model $p$ is 0.5 or 0.4, so the chance of heads has to lie between them.` },
         ],
         explain: r`$E[p \mid \text{data}] = 0.5 \times 0.566 + 0.4 \times 0.434 \approx 0.457$. That is a <b>conditional expectation</b>, and averaging a prediction over the posterior is how a Bayesian predicts.`,

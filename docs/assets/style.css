@@ -282,6 +282,8 @@ b, strong { font-weight: 500; }
 .tbl th, .tbl td { padding: 7px 8px; border: 1px solid var(--line); text-align: center; }
 .tbl th { font-weight: 300; font-style: italic; color: var(--text-2); background: var(--ground); }
 .tbl td.ask { color: var(--accent); font-weight: 500; box-shadow: inset 0 0 0 2px var(--accent); }
+.formula { margin: 4px 0 18px; font-size: 21px; text-align: center; color: var(--text); }
+.formula .katex-display { margin: 0.3em 0; }
 .eq-line { transition: opacity .3s; }
 .eq-line.is-hidden { opacity: 0; visibility: hidden; }
 .slider-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--text-2); }

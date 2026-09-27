@@ -11,7 +11,8 @@
 
   window.WIDGETS.uponHistogram = function uponHistogram(el) {
     const W = 320, H = 222, left = 28, base = 172, top = 30, ymax = 45;
-    const s = D.frame(W, H, "Histogram of how often Madison and Hamilton used upon");
+    const counts = (xs) => BINS.map((b, i) => (xs[i] ? `${xs[i]} in ${b}` : null)).filter(Boolean).join(", ");
+    const s = D.frame(W, H, `Papers by uses of "upon" per 1,000 words. Madison, 50 papers: ${counts(MADISON)}. Hamilton, 48 papers: ${counts(HAMILTON)}. Paper 54 falls in 0-1.`);
     const y = (v) => base - (v / ymax) * (base - top);
     const slot = (W - left - 6) / BINS.length, bw = 12;
     s.append(D.svg("rect", { x: left + slot, y: top - 16, width: slot, height: base - top + 16, fill: P.gold, opacity: 0.14 }));

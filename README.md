@@ -81,9 +81,12 @@ Commits use the repository-local identity `Batuhan Gundogdu <gundogdu@uchicago.e
 
 ## Adding next week's tutorial
 
-1. Copy an existing tutorial folder, such as `docs/t0/`, to `docs/t2/` and rewrite `lesson.js`.
+1. Copy `docs/t1/` to `docs/t2/` and rewrite `lesson.js`.
    Keep question ids unique within the lesson.
-2. Write the answer key in `private/answers/t2.json`: an option id for multiple choice, a number for numeric questions, a mapping for matching questions.
+   Ask multiple choice or matching questions only: students should never have to type a number they computed by hand, and the Node tests fail if a tutorial on the landing page has a `numeric` step.
+   Give every wrong option a `why`, the mistake that leads to it; a student who picks it sees that reason above the worked explanation.
+   Set `columns: 2` on questions whose options are short, such as fractions.
+2. Write the answer key in `private/answers/t2.json`: an option id for multiple choice, a mapping for matching questions.
 3. Run `node tools/build_lock.mjs t2 --roster private/roster.csv`.
    The script refuses to build if the key and the lesson disagree.
 4. Add the tutorial to `docs/index.html`.

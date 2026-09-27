@@ -1,34 +1,47 @@
-/* probTree: a two-level probability tree, A or not A and then B or not B. The two branches
- * that end in B are highlighted and their products written beside them. Labels are symbolic,
- * so the next question still needs the numbers. */
+/* probTree: a two-level probability tree. props.first holds the two first-level outcomes and
+ * props.second the two outcomes that follow each of them; every item is { name, p, fill? },
+ * where p is the branch probability as text and fill names a color in the palette (DRAW.P).
+ * The two paths that end in outcome props.hot (default 0) of the second level are highlighted,
+ * so the tree shows which products add up to that outcome's total probability. The drawing's
+ * label spells out every branch for screen readers. props.caption (HTML with TeX) goes
+ * underneath. */
 (() => {
   "use strict";
   const D = window.DRAW;
   const { P } = D;
 
   window.WIDGETS.probTree = function probTree(el, props, ctx) {
-    const s = D.frame(380, 210, "Probability tree: A or not A, then B or not B");
+    const hot = props.hot || 0;
+    const spoken = props.first.map((f, i) => `${f.name}, ${f.p}: ${props.second[i].map((g) => `${g.name} ${g.p}`).join(", ")}`).join("; ");
+    const s = D.frame(360, 210, `Probability tree. ${spoken}.`);
     s.style.maxWidth = "460px";
-    const root = [22, 105];
-    const mid = { A: [140, 55], nA: [140, 155] };
-    const leaf = { AB: [270, 25], AnB: [270, 85], nAB: [270, 125], nAnB: [270, 185] };
-    const edge = (a, b, hot) => D.svg("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: hot ? P.accent : P.mist, "stroke-width": hot ? 2 : 1.4 });
-    s.append(edge(root, mid.A, true), edge(root, mid.nA, true));
-    s.append(edge(mid.A, leaf.AB, true), edge(mid.A, leaf.AnB, false), edge(mid.nA, leaf.nAB, true), edge(mid.nA, leaf.nAnB, false));
-    const label = (x, y, str, extra = {}) => D.text(x, y, str, { "text-anchor": "middle", "font-style": "italic", "font-size": 13, ...extra });
-    s.append(label(76, 70, "P(A)"), label(76, 150, "P(¬A)"));
-    s.append(label(205, 30, "P(B|A)"), label(205, 88, "P(¬B|A)", { fill: P.muted }));
-    s.append(label(205, 132, "P(B|¬A)"), label(205, 190, "P(¬B|¬A)", { fill: P.muted }));
+    const root = [14, 105];
+    const mid = [[140, 55], [140, 155]];
+    const leaf = [[[270, 25], [270, 85]], [[270, 125], [270, 185]]];
+    const edge = (a, b, on) => D.svg("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: on ? P.accent : P.mist, "stroke-width": on ? 2 : 1.4, "data-hot": on ? "true" : null });
+    const label = (x, y, str, extra = {}) => D.text(x, y, str, { "text-anchor": "middle", "font-size": 15.5, fill: P.text, ...extra });
     const node = (xy, fill, r = 6) => D.svg("circle", { cx: xy[0], cy: xy[1], r, fill, stroke: P.ground, "stroke-width": 1 });
-    s.append(node(root, P.text, 4), node(mid.A, P.blue), node(mid.nA, P.mist));
-    s.append(node(leaf.AB, P.orange), node(leaf.AnB, P.mist), node(leaf.nAB, P.orange), node(leaf.nAnB, P.mist));
-    s.append(D.text(mid.A[0] - 12, mid.A[1] - 10, "A", { "text-anchor": "middle", fill: P.text }), D.text(mid.nA[0] - 12, mid.nA[1] + 20, "¬A", { "text-anchor": "middle", fill: P.text }));
-    s.append(D.text(leaf.AB[0] + 12, leaf.AB[1] + 4, "B", { fill: P.text }), D.text(leaf.AnB[0] + 12, leaf.AnB[1] + 4, "¬B", { fill: P.muted }));
-    s.append(D.text(leaf.nAB[0] + 12, leaf.nAB[1] + 4, "B", { fill: P.text }), D.text(leaf.nAnB[0] + 12, leaf.nAnB[1] + 4, "¬B", { fill: P.muted }));
-    s.append(D.text(300, leaf.AB[1] + 4, "P(B|A)P(A)", { "font-size": 12, fill: P.accent, "font-style": "italic" }));
-    s.append(D.text(300, leaf.nAB[1] + 4, "P(B|¬A)P(¬A)", { "font-size": 12, fill: P.accent, "font-style": "italic" }));
-    const caption = D.html("div", { class: "caption", html: "$P(B)$ is the sum of the two highlighted paths." });
-    el.append(D.card(s, caption));
-    ctx.math(caption);
+    props.first.forEach((f, i) => {
+      s.append(edge(root, mid[i], true));
+      s.append(label(76, i ? 150 : 70, f.p, { "data-branch": `${i}` }));
+      props.second[i].forEach((g, j) => {
+        const on = j === hot;
+        s.append(edge(mid[i], leaf[i][j], on));
+        s.append(label(205, [[30, 88], [132, 190]][i][j], g.p, { fill: on ? P.text : P.muted, "data-branch": `${i}${j}` }));
+      });
+    });
+    s.append(node(root, P.text, 4));
+    props.first.forEach((f, i) => {
+      s.append(node(mid[i], P[f.fill] || (i ? P.mist : P.blue)));
+      s.append(D.text(mid[i][0] - 10, mid[i][1] + (i ? 23 : -13), f.name, { "text-anchor": "middle", "font-size": 14.5, fill: P.text, "font-style": "italic" }));
+      props.second[i].forEach((g, j) => {
+        s.append(node(leaf[i][j], P[g.fill] || (j === hot ? P.orange : P.mist)));
+        s.append(D.text(leaf[i][j][0] + 11, leaf[i][j][1] + 5, g.name, { "font-size": 14.5, fill: j === hot ? P.text : P.muted, "data-leaf": `${i}${j}` }));
+      });
+    });
+    const parts = [s];
+    if (props.caption) parts.push(D.html("div", { class: "caption", html: props.caption }));
+    el.append(D.card(...parts));
+    ctx.math(el);
   };
 })();

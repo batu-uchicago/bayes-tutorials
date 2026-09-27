@@ -22,14 +22,14 @@
       const p = MODES[mode].p;
       while (chart.firstChild) chart.firstChild.remove();
       const y = (v) => base - (v / ymax) * (base - top);
-      chart.append(D.svg("line", { x1: left, x2: W - 6, y1: base, y2: base, stroke: P.line }));
+      chart.append(D.svg("line", { x1: left, x2: W - 6, y1: base, y2: base, stroke: P.mist }));
       for (const v of [0, 0.25, 0.5]) chart.append(D.text(left - 6, y(v) + 4, D.fmt(v), { "text-anchor": "end", "font-size": 11, fill: P.muted }));
       const bw = 30, gap = (W - left - 10 - 6 * bw) / 6;
       p.forEach((v, i) => {
         const x = left + 6 + i * (bw + gap);
-        chart.append(D.bar(x, base, bw, base - y(v), i === 3 ? P.terra : P.sand));
-        chart.append(D.text(x + bw / 2, y(v) - 5, D.fmt(v), { "text-anchor": "middle", "font-size": 12, fill: P.ink, "data-kind": "value" }));
-        chart.append(D.text(x + bw / 2, base + 17, String(i + 1), { "text-anchor": "middle", fill: P.ink }));
+        chart.append(D.bar(x, base, bw, base - y(v), i === 3 ? P.orange : P.mist));
+        chart.append(D.text(x + bw / 2, y(v) - 5, D.fmt(v), { "text-anchor": "middle", "font-size": 12, fill: P.text, "data-kind": "value" }));
+        chart.append(D.text(x + bw / 2, base + 17, String(i + 1), { "text-anchor": "middle", fill: P.text }));
       });
       readout.innerHTML = `$p_X(4) = ${D.fmt(p[3])}$, and the six bars add up to <b>${D.fmt(window.CORE.sum(p))}</b>.`;
       ctx.math(readout);

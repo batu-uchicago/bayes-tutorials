@@ -18,7 +18,7 @@
   const enc = new TextEncoder();
   const STORE = `bayes-tutorial-${L.id}-${K.salt.slice(0, 8)}`;
   const QTYPES = new Set(["mcq", "numeric", "match"]);
-  const CONFETTI = ["#7A5C99", "#D9826B", "#7FA38A", "#E4DCCD", "#2B2A28"];
+  const CONFETTI = ["#FFA319", "#FFB547", "#D49464", "#6FA0B8", "#ADB17D", "#F7EEE3"];
 
   // ---------------------------------------------------------------- helpers
   function el(tag, attrs = {}, ...kids) {

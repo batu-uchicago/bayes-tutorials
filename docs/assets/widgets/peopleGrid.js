@@ -7,10 +7,10 @@
   const D = window.DRAW;
   const { P } = D;
   const GROUPS = [
-    { id: "both", n: 5, fill: P.plum, label: "both traits" },
-    { id: "b", n: 10, fill: P.terra, label: "Morton's toe only" },
-    { id: "a", n: 65, fill: P.sage, label: "left-eye dominant only" },
-    { id: "n", n: 20, fill: P.sand, label: "neither" },
+    { id: "both", n: 5, fill: P.gold, label: "both traits" },
+    { id: "b", n: 10, fill: P.orange, label: "Morton's toe only" },
+    { id: "a", n: 65, fill: P.blue, label: "left-eye dominant only" },
+    { id: "n", n: 20, fill: P.mist, label: "neither" },
   ];
   const TEXT = {
     none: "Both traits: <b>5</b> of 100 people, so $P(AB) = 5/100 = 0.05$.",

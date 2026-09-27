@@ -55,19 +55,19 @@
       for (const svg of [priorSvg, postSvg]) while (svg.firstChild) svg.firstChild.remove();
       priorSvg.append(D.text(left, pTop - 12, "Prior", { "font-style": "italic", fill: P.muted }));
       postSvg.append(D.text(left, qTop - 12, "Posterior", { "font-style": "italic", fill: P.muted }));
-      priorSvg.append(D.svg("line", { x1: left, x2: W - left, y1: pBase, y2: pBase, stroke: P.line }));
-      postSvg.append(D.svg("line", { x1: left, x2: W - left, y1: qBase, y2: qBase, stroke: P.line }));
+      priorSvg.append(D.svg("line", { x1: left, x2: W - left, y1: pBase, y2: pBase, stroke: P.mist }));
+      postSvg.append(D.svg("line", { x1: left, x2: W - left, y1: qBase, y2: qBase, stroke: P.mist }));
       MONTHS.forEach((m, i) => {
         const x = left + i * slot + 3;
         const ph = Math.min((prior[i] / pMax) * (pBase - pTop), pBase - pTop);
         const qh = Math.min((post[i] / qMax) * (qBase - qTop), qBase - qTop);
         const hot = revealed && i === 4;
         const picked = keyboard && i === keyMonth;
-        priorSvg.append(D.bar(x, pBase, bw, ph, P.sand, { "data-kind": "prior", "data-month": i, "data-value": prior[i].toFixed(4), stroke: picked ? P.plum : P.ink, "stroke-width": picked ? 2.2 : 0.75 }));
-        priorSvg.append(D.text(x + bw / 2, pBase + 14, m[0], { "text-anchor": "middle", "font-size": 11, fill: P.ink2 }));
-        postSvg.append(D.bar(x, qBase, bw, qh, hot ? P.plum : P.sage, { "data-kind": "post", "data-month": i, "data-value": post[i].toFixed(4) }));
-        if (post[i] >= 0.1) postSvg.append(D.text(x + bw / 2, qBase - qh - 4, D.fmt(post[i]), { "text-anchor": "middle", "font-size": 11, fill: P.ink }));
-        postSvg.append(D.text(x + bw / 2, qBase + 14, m[0], { "text-anchor": "middle", "font-size": 11, fill: hot ? P.plum : P.ink2 }));
+        priorSvg.append(D.bar(x, pBase, bw, ph, P.mist, { "data-kind": "prior", "data-month": i, "data-value": prior[i].toFixed(4), stroke: picked ? P.accent : P.ground, "stroke-width": picked ? 2.2 : 0.75 }));
+        priorSvg.append(D.text(x + bw / 2, pBase + 14, m[0], { "text-anchor": "middle", "font-size": 11, fill: P.text2 }));
+        postSvg.append(D.bar(x, qBase, bw, qh, hot ? P.gold : P.blue, { "data-kind": "post", "data-month": i, "data-value": post[i].toFixed(4) }));
+        if (post[i] >= 0.1) postSvg.append(D.text(x + bw / 2, qBase - qh - 4, D.fmt(post[i]), { "text-anchor": "middle", "font-size": 11, fill: P.text }));
+        postSvg.append(D.text(x + bw / 2, qBase + 14, m[0], { "text-anchor": "middle", "font-size": 11, fill: hot ? P.gold : P.text2 }));
       });
       readout.innerHTML = revealed ? "Mary was born on <b>May 8</b>. A flat prior gives May only about 0.05; a prior that favors May lifts it to about 0.14." : "";
     }

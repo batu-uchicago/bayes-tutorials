@@ -1,4 +1,4 @@
-/* Drawing helpers and palette shared by every widget (style B: warm paper, ink outlines).
+/* Drawing helpers and palette shared by every widget ("Night stacks": light marks on a dark card).
  * Widgets register themselves as window.WIDGETS.<name> = (container, props, ctx) => void,
  * where ctx.setReady(flag, label) holds the Next button until the student has explored and
  * ctx.math(node) renders TeX inside node. */
@@ -6,10 +6,14 @@ window.WIDGETS = window.WIDGETS || {};
 window.DRAW = (() => {
   "use strict";
   const NS = "http://www.w3.org/2000/svg";
+  // Mirrors the variables in style.css. Hypotheses and categories use UChicago's lighter
+  // secondary tints (the light blue is lifted a little further to stay readable as text on a
+  // dark card); mist is the neutral category. Shapes are outlined in the ground color, which
+  // reads as a thin cut between neighboring marks.
   const P = Object.freeze({
-    paper: "#FBF6EE", card: "#FFFDF8", ink: "#2B2A28", ink2: "#4A4640", muted: "#756D61",
-    line: "#CFC5B3", sand: "#E4DCCD", terra: "#D9826B", terraInk: "#8A3F2B",
-    sage: "#7FA38A", sageInk: "#3F6049", plum: "#7A5C99", accent: "#9A523D",
+    ground: "#350E20", raised: "#43152A", track: "#5A2A3F", line: "#6B2E48",
+    text: "#F7EEE3", text2: "#F1E5D6", muted: "#E0CFC3", accent: "#FFB547",
+    orange: "#D49464", blue: "#6FA0B8", gold: "#FFB547", green: "#ADB17D", mist: "#A0898B",
   });
   const FONT = "Fraunces, Georgia, serif";
 
@@ -21,7 +25,7 @@ window.DRAW = (() => {
   }
 
   function text(x, y, str, attrs = {}) {
-    const t = svg("text", { x, y, "font-family": FONT, "font-size": 13, fill: P.ink2, ...attrs });
+    const t = svg("text", { x, y, "font-family": FONT, "font-size": 13, fill: P.text2, ...attrs });
     t.textContent = str;
     return t;
   }
@@ -50,8 +54,8 @@ window.DRAW = (() => {
   // A little person about s wide and 1.25 s tall, with its top-left corner at (x, y).
   function person(x, y, s, fill) {
     return svg("g", { transform: `translate(${x},${y}) scale(${s / 16})` },
-      svg("circle", { cx: 8, cy: 4.4, r: 3.8, fill, stroke: P.ink, "stroke-width": 0.9 }),
-      svg("path", { d: "M1.4 19.5c0-5 3-8.3 6.6-8.3s6.6 3.3 6.6 8.3z", fill, stroke: P.ink, "stroke-width": 0.9 }));
+      svg("circle", { cx: 8, cy: 4.4, r: 3.8, fill, stroke: P.ground, "stroke-width": 0.9 }),
+      svg("path", { d: "M1.4 19.5c0-5 3-8.3 6.6-8.3s6.6 3.3 6.6 8.3z", fill, stroke: P.ground, "stroke-width": 0.9 }));
   }
 
   function card(...kids) {
@@ -60,10 +64,10 @@ window.DRAW = (() => {
 
   const fmt = (x, d = 2) => Number(x).toFixed(d);
 
-  // A bar with a thin ink outline, growing up from the baseline y0.
+  // A bar with a thin outline in the ground color, growing up from the baseline y0.
   function bar(x, y0, w, h, fill, attrs = {}) {
     const hh = Math.max(h, 0);
-    return svg("rect", { x, y: y0 - hh, width: w, height: hh, rx: 2, fill, stroke: P.ink, "stroke-width": 0.75, ...attrs });
+    return svg("rect", { x, y: y0 - hh, width: w, height: hh, rx: 2, fill, stroke: P.ground, "stroke-width": 0.75, ...attrs });
   }
 
   return Object.freeze({ NS, P, FONT, svg, text, html, frame, button, person, card, fmt, bar });

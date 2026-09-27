@@ -13,13 +13,13 @@
     const out = D.html("output", {}, "0.50");
     const cell = (k) => D.html("div", { "data-cell": k });
     const c = { ph: cell("prior-h"), pm: cell("prior-m"), lh: cell("lik-h"), lm: cell("lik-m"), xh: cell("prod-h"), xm: cell("prod-m") };
-    const barH = D.html("div", { class: "bar", "data-post": "h", style: `background:${P.terra}` });
-    const barM = D.html("div", { class: "bar", "data-post": "m", style: `background:${P.sage}` });
+    const barH = D.html("div", { class: "bar", "data-post": "h", style: `background:${P.orange}` });
+    const barM = D.html("div", { class: "bar", "data-post": "m", style: `background:${P.blue}` });
     const head = (t) => D.html("div", { class: "h" }, t);
     const grid = D.html("div", { class: "box" },
       head(""), head("Prior"), head("Likelihood"), head("Prior × likelihood"), head("Posterior"),
-      D.html("div", { style: `color:${P.terraInk}` }, "Hamilton"), c.ph, c.lh, c.xh, D.html("div", { class: "track" }, barH),
-      D.html("div", { style: `color:${P.sageInk}` }, "Madison"), c.pm, c.lm, c.xm, D.html("div", { class: "track" }, barM));
+      D.html("div", { style: `color:${P.orange}` }, "Hamilton"), c.ph, c.lh, c.xh, D.html("div", { class: "track" }, barH),
+      D.html("div", { style: `color:${P.blue}` }, "Madison"), c.pm, c.lm, c.xm, D.html("div", { class: "track" }, barM));
     el.append(D.card(
       D.html("label", { class: "slider-row" }, D.html("span", { style: "flex:none" }, "Prior on Hamilton"), slider, out),
       grid,

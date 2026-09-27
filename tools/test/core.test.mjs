@@ -86,6 +86,20 @@ test("expectation is the probability-weighted average", () => {
   near(CORE.expectation([10, 20], [0.25, 0.75]), 17.5);
 });
 
+test("texToText reads a formula as plain text for the result announcement", () => {
+  const r = String.raw;
+  assert.equal(CORE.texToText(r`P(\text{vanilla} \mid \text{Bowl 1})`), "P(vanilla | Bowl 1)");
+  assert.equal(CORE.texToText(r`P(AB) = P(A)\,P(B)`), "P(AB) = P(A) P(B)");
+  assert.equal(CORE.texToText(r`1/2 \times 3/4 \approx 0.38`), "1/2 × 3/4 ≈ 0.38");
+  assert.equal(CORE.texToText(r`\dfrac{3/8}{5/8} = \frac{3}{5}`), "(3/8)/(5/8) = 3/5");
+  assert.equal(CORE.texToText(r`P(\neg A\, B) = 10{,}000`), "P(not A B) = 10,000");
+});
+
+test("texToText keeps the backslash of a command it does not know", () => {
+  assert.equal(CORE.texToText(String.raw`p \propto q`), String.raw`p \propto q`);
+  assert.equal(CORE.texToText(String.raw`\constructor`), String.raw`\constructor`);
+});
+
 test("the engine and the build use core.js instead of their own copies", () => {
   const engine = fs.readFileSync(path.join(ROOT, "docs", "assets", "engine.js"), "utf8");
   const build = fs.readFileSync(path.join(ROOT, "tools", "build_lock.mjs"), "utf8");

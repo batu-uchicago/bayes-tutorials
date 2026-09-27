@@ -1,4 +1,4 @@
-/* Shared answer handling and probability helpers.
+/* Shared answer handling, probability helpers and the plain reading of formulas.
  *
  * Loaded by the engine in the browser and, through Node's vm module, by
  * tools/build_lock.mjs and tools/test/core.test.mjs, so the site and the
@@ -58,5 +58,21 @@
     return values.reduce((a, x, i) => a + x * probs[i], 0);
   }
 
-  window.CORE = Object.freeze({ normalizeId, parseNumber, canonNumber, sum, normalize, posterior, expectation });
+  // Reads a TeX formula as plain text for a screen-reader announcement, the way it would be
+  // typed in a sentence: P(\text{vanilla} \mid \text{Bowl 1}) becomes "P(vanilla | Bowl 1)".
+  // A command missing from TEX_WORDS keeps its backslash, so the site tests catch a reason that uses one.
+  const TEX_WORDS = { mid: "|", times: "\u00d7", cdot: "\u00d7", approx: "\u2248", cap: "\u2229", neg: "not", sum: "\u2211", Pr: "Pr" };
+  function texToText(tex) {
+    const part = (x) => (/^[\w.]+$/.test(x.trim()) ? x.trim() : `(${x.trim()})`);
+    return String(tex)
+      .replace(/\\text\{([^{}]*)\}/g, "$1")
+      .replace(/\{,\}/g, ",")
+      .replace(/\\d?frac\{([^{}]*)\}\{([^{}]*)\}/g, (_, a, b) => `${part(a)}/${part(b)}`)
+      .replace(/\\[,;: ]/g, " ")
+      .replace(/\\([A-Za-z]+)/g, (m, w) => (Object.hasOwn(TEX_WORDS, w) ? TEX_WORDS[w] : m))
+      .replace(/[{}]/g, "")
+      .replace(/\s+/g, " ").trim();
+  }
+
+  window.CORE = Object.freeze({ normalizeId, parseNumber, canonNumber, sum, normalize, posterior, expectation, texToText });
 })();

@@ -17,6 +17,13 @@ function walk(dir) {
   });
 }
 const files = walk(DOCS);
+const CORE = (() => {
+  const file = path.join(DOCS, "assets", "core.js");
+  const context = { window: {} };
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(file, "utf8"), context, { filename: file });
+  return context.window.CORE;
+})();
 const pages = files.filter((f) => f.endsWith("index.html"));
 const refs = (html) => [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]);
 const scriptsOf = (html) => [...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]);
@@ -90,7 +97,7 @@ test("every widget a lesson uses is registered by a script its page loads", () =
   }
 });
 
-test("tutorials on the landing page ask no typed-number questions, and every option reason is text", () => {
+test("tutorials on the landing page ask no typed-number questions, and every option reason is text a screen reader can hear", () => {
   const landing = fs.readFileSync(path.join(DOCS, "index.html"), "utf8");
   for (const folder of [...landing.matchAll(/<a href="(t\d+)\/"/g)].map((m) => m[1])) {
     const file = path.join(DOCS, folder, "lesson.js");
@@ -101,7 +108,12 @@ test("tutorials on the landing page ask no typed-number questions, and every opt
       assert.notEqual(s.type, "numeric", `${folder}: "${s.title}" asks for a typed number; make it multiple choice`);
       if (s.type !== "mcq") continue;
       for (const o of s.options) {
-        if (o.why !== undefined) assert.ok(typeof o.why === "string" && o.why.trim(), `${folder}: "${s.title}" option ${o.id} has an empty reason`);
+        if (o.why === undefined) continue;
+        assert.ok(typeof o.why === "string" && o.why.trim(), `${folder}: "${s.title}" option ${o.id} has an empty reason`);
+        // The result announcement reads each formula in the reason as plain text; dollar amounts are not formulas.
+        for (const [, tex] of o.why.replace(/<span class="nomath">[^<]*<\/span>/g, "").matchAll(/\$([^$]+)\$/g)) {
+          assert.doesNotMatch(CORE.texToText(tex), /\\/, `${folder}: "${s.title}" option ${o.id} uses a TeX command that texToText in core.js cannot read: ${tex}`);
+        }
       }
     }
   }

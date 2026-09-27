@@ -85,6 +85,7 @@ Commits use the repository-local identity `Batuhan Gundogdu <gundogdu@uchicago.e
    Keep question ids unique within the lesson.
    Ask multiple choice or matching questions only: students should never have to type a number they computed by hand, and the Node tests fail if a tutorial on the landing page has a `numeric` step.
    Give every wrong option a `why`, the mistake that leads to it; a student who picks it sees that reason above the worked explanation.
+   A screen reader hears the reason after the verdict, with each formula read as plain text, and the Node tests fail if a formula in a `why` uses a TeX command that `texToText` in `docs/assets/core.js` cannot read.
    Set `columns: 2` on questions whose options are short, such as fractions.
 2. Write the answer key in `private/answers/t2.json`: an option id for multiple choice, a mapping for matching questions.
 3. Run `node tools/build_lock.mjs t2 --roster private/roster.csv`.

@@ -17,7 +17,7 @@
     id: "t1",
     kicker: "Tutorial 1 · before Session 1",
     title: "Thinking in probabilities",
-    lede: "About 20 minutes. Roll a million-dollar die, count toes, raid two bowls of cookies, unmask a Founding Father and guess a mystery die. Answer every question correctly, on the first try or a later one, to earn your magic word for Canvas.",
+    lede: "About 20 minutes. Bid on a million-dollar die, count toes, raid two bowls of cookies, unmask a Founding Father and guess a mystery die. Answer every question correctly, on the first try or a later one, to earn your magic word for Canvas.",
     finishLine: "In class: three puzzles we'll solve together.",
     submitLine: "Enter this word in the <b>Tutorial 1</b> quiz on Canvas before class on <b>Friday, Oct 2 at 1:30 PM</b>.",
     introVisual: { widget: "introScene" },
@@ -32,45 +32,29 @@
     steps: [
       // ---------------------------------------------------------------- Unit 1
       {
-        type: "read", unit: "chance", title: "The million-dollar die", button: "Next",
-        visual: { widget: "dieBars", props: { need: 500 } },
-        html: r`<p>A gamemaster offers you a bet on one roll of a die. Roll a four and you win ${usd("1,000,000")}; roll anything else and you lose ${usd("10,000")}.</p><p>How likely is a four? Roll the die and watch the share of each face settle down as the rolls pile up. That long-run share is what we mean by a probability.</p>${src("Donovan and Mickey, Chapter 1 · Lecture 1, slide 23")}`,
-      },
-      {
-        type: "mcq", id: "t1_die_share", unit: "chance", title: "Estimate from data", columns: 2,
-        prompt: r`Donovan and Mickey rolled a die 500 times and got 41 fours. What is their estimate of $P(\text{four})$?`,
-        options: [
-          { id: "a", html: frac(41, 500) },
-          { id: "b", html: frac(41, 459), why: r`41/459 compares the fours with the 459 rolls that weren't fours. That ratio is the <i>odds</i> of a four; a probability divides by all 500 rolls.` },
-          { id: "c", html: frac(1, 6), why: r`1/6 is what a fair die would give. The question asks what these 500 rolls say, and fours came up less often than that.` },
-          { id: "d", html: frac(459, 500), why: r`459/500 is the share of rolls that were <i>not</i> a four.` },
-        ],
-        explain: r`$41/500 = 0.082$. That is well below the $1/6 \approx 0.17$ of a fair die, so after 500 rolls you might start to doubt this die.`,
-      },
-      {
-        type: "read", unit: "chance", title: "A distribution lists every outcome",
+        type: "read", unit: "chance", title: "Distribution",
         visual: { widget: "pmfToggle" },
         html: r`<p>A <b>probability distribution</b> gives the probability of every outcome, $p_X(x) = P(X = x)$. No probability is negative, and together they add up to 1: $\sum_x p_X(x) = 1$.</p><p>Switch between a fair die and a loaded die that favors fours.</p>${src("Donovan and Mickey, Chapter 1 · Lecture 1, slide 24")}`,
       },
       {
-        type: "mcq", id: "t1_gamble", unit: "chance", title: "Is the gamble worth it?",
-        prompt: r`The <b>expectation</b> of $X$ is the probability-weighted average of its values: $E[X] = \sum_x x\, p_X(x)$. With a fair die, what are your expected net winnings from the bet?`,
+        type: "mcq", id: "t1_expectation", unit: "chance", title: "Expectation",
+        prompt: `A gamemaster offers a single roll of a fair die. Roll a four and you win ${usd("1,000,000")}; roll anything else and you pay ${usd("10,000")}. Only one person gets to play, and the seat goes to the highest bidder. What is the most you could bid and still come out ahead on average?`,
         options: [
-          { id: "a", html: `About −${usd("10,000")}`, why: `−${usd("10,000")} is what you lose on a roll that isn't a four. The expectation also counts the big win, weighted by its 1/6 chance.` },
-          { id: "c", html: `About +${usd("158,000")}` },
-          { id: "b", html: `About +${usd("394,000")}`, why: `+${usd("394,000")} is the expectation for the loaded die, where a four has probability 0.40.` },
-          { id: "d", html: `About +${usd("1,000,000")}`, why: `${usd("1,000,000")} is the prize itself. You win it only 1 time in 6 and lose ${usd("10,000")} the other 5 times.` },
+          { id: "a", html: `About ${usd("158,000")}` },
+          { id: "b", html: `About ${usd("167,000")}`, why: `About ${usd("167,000")} is ${usd("1,000,000")} × 1/6, the win alone. It forgets the ${usd("10,000")} you pay the other 5 times in 6.` },
+          { id: "c", html: `About ${usd("394,000")}`, why: `About ${usd("394,000")} is the loaded die from the last step, where a four comes up 40% of the time. This die is fair.` },
+          { id: "d", html: usd("1,000,000"), why: `${usd("1,000,000")} is the prize itself. Bid that and even a four only gets your money back, while the other 5 rolls in 6 cost you more.` },
         ],
-        explain: r`You win $1{,}000{,}000$ with probability $1/6$ and lose $10{,}000$ with probability $5/6$: $E[X] = (1/6)(1{,}000{,}000) - (5/6)(10{,}000) \approx 158{,}333$.`,
+        explain: r`$(1/6)(1{,}000{,}000) + (5/6)(-10{,}000) \approx 158{,}333$. That probability-weighted average of the payoffs is the <b>expectation</b>, $E[X] = \sum_x x\, p_X(x)$. Bid less than about ${usd("158,000")} and you come out ahead on average. Any single play still loses 5 times in 6, so a cautious bidder would stop well short of it.`,
       },
       // ---------------------------------------------------------------- Unit 2
       {
-        type: "read", unit: "traits", title: "100 people, two traits",
+        type: "read", unit: "traits", title: "Joint probability",
         visual: { widget: "peopleGrid" },
         html: r`<p>Donovan and Mickey describe 100 people and two traits. <b>A</b>: left-eye dominant, 70 people. <b>B</b>: Morton's toe, a second toe longer than the big toe, 15 people. Five people have both.</p><p>The <b>joint probability</b> of both traits is $P(AB) = 5/100 = 0.05$. The book writes it $\Pr(A \cap B)$; in class we write $P(AB)$.</p>${src("Donovan and Mickey, Chapter 2 · Lecture 1, slide 25")}`,
       },
       {
-        type: "mcq", id: "t1_missing_cell", unit: "traits", title: "Fill the missing cell", columns: 2,
+        type: "mcq", id: "t1_missing_cell", unit: "traits", title: "Marginal probability", columns: 2,
         visual: { widget: "jointTable", props: { rows: [
           ["", r`$A$: left eye`, r`$\neg A$: right eye`, "Sum"],
           [r`$B$: Morton's toe`, "0.05", "?", "0.15"],
@@ -87,12 +71,12 @@
         explain: r`The $B$ row adds up to $P(B)$: $P(AB) + P(\neg A\, B) = 0.15$, so $P(\neg A\, B) = 0.15 - 0.05 = 0.10$. Adding up a joint over one variable to get the other's probability is called <b>marginalization</b>.`,
       },
       {
-        type: "read", unit: "traits", title: "Conditioning is zooming in", button: "Next",
+        type: "read", unit: "traits", title: "Conditional probability", button: "Next",
         visual: { widget: "peopleGrid", props: { zoom: true } },
         html: r`<p>A <b>conditional probability</b> shrinks the world to the people with one trait, then asks about the other: $P(A \mid B) = \dfrac{P(AB)}{P(B)}$.</p><p>Zoom into each trait, and notice that $P(A \mid B)$ and $P(B \mid A)$ are not the same.</p>${src("Donovan and Mickey, Chapter 2 · Lecture 1, slide 30")}`,
       },
       {
-        type: "mcq", id: "t1_independent", unit: "traits", title: "Independent or not?",
+        type: "mcq", id: "t1_independent", unit: "traits", title: "Independence",
         prompt: r`Two events are <b>independent</b> exactly when $P(AB) = P(A)\,P(B)$: learning one tells you nothing about the other. Are left-eye dominance and Morton's toe independent?`,
         options: [
           { id: "b", html: "Yes, because some people have both traits", why: r`Sharing people isn't the test. Independence means the overlap is exactly as big as chance predicts, $P(AB) = P(A)\,P(B)$.` },
@@ -103,7 +87,7 @@
       },
       // ---------------------------------------------------------------- Unit 3
       {
-        type: "read", unit: "turn", title: "Bayes' rule from one table", button: "Next",
+        type: "read", unit: "turn", title: "Bayes' rule", button: "Next",
         visual: { widget: "bayesDerivation", props: {
           lines: [r`P(AB) = P(A \mid B)\,P(B)`, r`P(AB) = P(B \mid A)\,P(A)`, r`P(A \mid B) = \dfrac{P(B \mid A)\,P(A)}{P(B)}`],
           check: r`Check it on the toe table: $\dfrac{(5/70) \times 0.70}{0.15} = 0.33$, the same $P(A \mid B)$ you found by zooming in.`,
@@ -111,7 +95,7 @@
         html: r`<p>The joint probability can be written two ways. Set them equal, divide by $P(B)$, and you have <b>Bayes' rule</b>.</p>${src("Donovan and Mickey, Chapter 3 · Lecture 1, slide 36")}`,
       },
       {
-        type: "match", id: "t1_parts", unit: "turn", title: "Name the parts",
+        type: "match", id: "t1_parts", unit: "turn", title: "Prior, likelihood, evidence, posterior",
         prompt: r`In Bayesian inference, $A$ becomes a hypothesis $H$ and $B$ becomes the data: $P(H \mid \text{data}) = \dfrac{P(\text{data} \mid H)\,P(H)}{P(\text{data})}$. Match each name to its meaning.`,
         left: [
           { id: "prior", html: "Prior" },
@@ -128,7 +112,7 @@
         explain: "The evidence is the same for every hypothesis, so it only rescales: the posterior is proportional to prior × likelihood.",
       },
       {
-        type: "read", unit: "turn", title: "The cookie problem",
+        type: "read", unit: "turn", title: "Law of total probability",
         visual: { widget: "cookieBowls" },
         html: r`<p>Two bowls of cookies. You pick a bowl at random and, without looking, draw a cookie. It's vanilla. Which bowl did it come from?</p><p>The bowls tell you $P(\text{vanilla} \mid \text{bowl})$, but you want $P(\text{bowl} \mid \text{vanilla})$. Bayes' rule turns it around. Its denominator, the evidence, comes from the <b>law of total probability</b>, also called marginalizing over the bowls:</p>$$P(V) = P(V \mid B_1)\,P(B_1) + P(V \mid B_2)\,P(B_2)$$${src("Downey, Think Bayes, Chapter 2 · Lecture 1, slide 34")}`,
       },
@@ -180,7 +164,7 @@
         html: r`<p>Federalist Paper No. 54 was written by Alexander Hamilton or James Madison. Its 2,008 words use "upon" twice: 0.996 times per 1,000 words.</p><p>The chart counts how often each man used "upon" in papers we know he wrote.</p>${src("Donovan and Mickey, Chapter 5")}`,
       },
       {
-        type: "mcq", id: "t1_upon_lik", unit: "author", title: "Read a likelihood off the chart", columns: 2,
+        type: "mcq", id: "t1_upon_lik", unit: "author", title: "Likelihood", columns: 2,
         visual: { widget: "uponHistogram" },
         prompt: r`Madison's <b>likelihood</b> is the share of his papers in the same bin as paper 54, which use "upon" more than 0 and at most 1 time per 1,000 words. What is it?`,
         options: [
@@ -192,7 +176,7 @@
         explain: r`7 of Madison's 50 papers fall in that bin: $7/50 = 0.14$. For Hamilton it is $1/48 \approx 0.021$. Likelihoods don't have to add up to 1: each one says how well an author explains the data.`,
       },
       {
-        type: "read", unit: "author", title: "The Bayes box", button: "Next",
+        type: "read", unit: "author", title: "Posterior", button: "Next",
         visual: { widget: "bayesBox" },
         html: r`<p>Multiply each author's prior by his likelihood, then rescale the products so they add up to 1. The result is the <b>posterior</b>.</p><p>Move the prior. Hamilton signed 43 known papers and Madison 14, which suggests a prior near 0.75 for Hamilton.</p>${src("Donovan and Mickey, Chapter 5")}`,
       },
@@ -230,7 +214,7 @@
         html: r`<p>A coin is either fair, with a $p = 0.5$ chance of heads, or weighted, with $p = 0.4$. You start at 50/50. Flip it three times and watch the posterior update after each flip.</p>${src("Donovan and Mickey, Chapter 8 · Lecture 1, slide 41")}`,
       },
       {
-        type: "mcq", id: "t1_next_flip", unit: "many", title: "Predict the next flip", columns: 2,
+        type: "mcq", id: "t1_next_flip", unit: "many", title: "Conditional expectation", columns: 2,
         prompt: r`The chance that the next flip lands heads averages $p$ over the posterior: $P(\text{heads next} \mid \text{data}) = E[p \mid \text{data}]$. With posteriors 0.566 for $p = 0.5$ and 0.434 for $p = 0.4$, what is it?`,
         options: [
           { id: "a", html: "0.450", why: "0.450 is halfway between 0.5 and 0.4, which would be right only if the posterior were 50/50. It leans toward the fair coin, so the average sits a little higher." },
